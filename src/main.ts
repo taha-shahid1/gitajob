@@ -39,9 +39,17 @@ function getTargetDbIds(): string[] {
 
 function getWriteDelayMs(): number {
   const raw = process.env.NOTION_WRITE_DELAY_MS
-  if (!raw) return 120
+  if (!raw) return 350
   const parsed = Number(raw)
-  if (!Number.isFinite(parsed) || parsed < 0) return 120
+  if (!Number.isFinite(parsed) || parsed < 0) return 350
+  return parsed
+}
+
+function getDbSwitchDelayMs(): number {
+  const raw = process.env.NOTION_DB_SWITCH_DELAY_MS
+  if (!raw) return 600
+  const parsed = Number(raw)
+  if (!Number.isFinite(parsed) || parsed < 0) return 600
   return parsed
 }
 
@@ -82,6 +90,7 @@ function sleep(ms: number): Promise<void> {
 async function main(): Promise<void> {
   const targetDbIds = getTargetDbIds()
   const writeDelayMs = getWriteDelayMs()
+  const dbSwitchDelayMs = getDbSwitchDelayMs()
   const dryRun = process.env.DRY_RUN === '1'
   const asOf = new Date()
 
@@ -158,6 +167,10 @@ async function main(): Promise<void> {
           await markRemoved(notion, page.pageId)
           await sleep(writeDelayMs)
         }
+      }
+
+      if (!dryRun && dbStates.length > 1) {
+        await sleep(dbSwitchDelayMs)
       }
     }
 
