@@ -53,3 +53,7 @@ export function isTechnicalRole(role: string): boolean {
   if (NON_TECH_ROLE_PATTERNS.some(pattern => pattern.test(role))) return false
   return true
 }
+
+export function hasGraduationCapEmoji(text: string): boolean {
+  return text.includes('🎓')
+}

@@ -1,7 +1,7 @@
 import type { Country, RawJob } from '../types'
 import { detectCountry, isRemoteNoCountry } from '../utils/location'
 import { CUT_OFF } from '../constants'
-import { isTechnicalRole } from '../utils/role'
+import { hasGraduationCapEmoji, isTechnicalRole } from '../utils/role'
 
 function stripHtml(s: string): string {
   return s.replace(/<[^>]+>/g, '').trim()
@@ -72,6 +72,7 @@ export function parseSpeedyApply(content: string, asOf: Date): RawJob[] {
     if (datePosted < CUT_OFF) continue
 
     const role = stripHtml(cells[map.role])
+    if (hasGraduationCapEmoji(role)) continue
     if (!isTechnicalRole(role)) continue
 
     const location = stripHtml(cells[map.loc])

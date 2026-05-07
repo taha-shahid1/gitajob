@@ -1,7 +1,7 @@
 import type { RawJob } from '../types'
 import { detectCountry } from '../utils/location'
 import { CUT_OFF } from '../constants'
-import { isTechnicalRole } from '../utils/role'
+import { hasGraduationCapEmoji, isTechnicalRole } from '../utils/role'
 
 /**
  * Splits a markdown table row while handling `\|` escaped pipes in cell content
@@ -54,6 +54,7 @@ export function parseCanadianInternships(content: string, _asOf: Date): RawJob[]
     if (!isSubRow && companyRaw) prevCompany = companyRaw
 
     if (!company || !role) continue
+    if (hasGraduationCapEmoji(role)) continue
     if (!isTechnicalRole(role)) continue
 
     const datePosted = parseDate(dateStr)
