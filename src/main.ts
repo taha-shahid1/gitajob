@@ -19,10 +19,30 @@ interface SourceStats {
   removed: number
 }
 
+interface DbSyncState {
+  dbId: string
+  existingById: Map<string, { pageId: string; source: string; status: string }>
+  existingBySource: Map<string, Array<{ pageId: string; jobId: string; status: string }>>
+}
+
 function requireEnv(name: string): string {
   const value = process.env[name]
   if (!value) throw new Error(`${name} is not set`)
   return value
+}
+
+function getTargetDbIds(): string[] {
+  const primary = requireEnv('NOTION_DB_ID')
+  const secondary = process.env.NOTION_PUBLIC_DB_ID?.trim()
+  return secondary ? [primary, secondary] : [primary]
+}
+
+function getWriteDelayMs(): number {
+  const raw = process.env.NOTION_WRITE_DELAY_MS
+  if (!raw) return 120
+  const parsed = Number(raw)
+  if (!Number.isFinite(parsed) || parsed < 0) return 120
+  return parsed
 }
 
 async function readLastRunState(): Promise<LastRunState> {
@@ -55,20 +75,33 @@ function buildActiveJobMap(jobs: RawJob[]): Map<string, RawJob> {
   return byId
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 async function main(): Promise<void> {
-  const notionDbId = requireEnv('NOTION_DB_ID')
+  const targetDbIds = getTargetDbIds()
+  const writeDelayMs = getWriteDelayMs()
   const dryRun = process.env.DRY_RUN === '1'
   const asOf = new Date()
 
   const notion = createNotionClient()
-  const existingPages = await loadAllPages(notion, notionDbId)
-
-  const existingById = new Map(existingPages.map(page => [page.jobId, page]))
-  const existingBySource = new Map<string, typeof existingPages>()
-  for (const page of existingPages) {
-    const pages = existingBySource.get(page.source) ?? []
-    pages.push(page)
-    existingBySource.set(page.source, pages)
+  const dbStates: DbSyncState[] = []
+  for (const dbId of targetDbIds) {
+    const existingPages = await loadAllPages(notion, dbId)
+    const existingById = new Map(
+      existingPages.map(page => [
+        page.jobId,
+        { pageId: page.pageId, source: page.source, status: page.status },
+      ]),
+    )
+    const existingBySource = new Map<string, Array<{ pageId: string; jobId: string; status: string }>>()
+    for (const page of existingPages) {
+      const pages = existingBySource.get(page.source) ?? []
+      pages.push({ pageId: page.pageId, jobId: page.jobId, status: page.status })
+      existingBySource.set(page.source, pages)
+    }
+    dbStates.push({ dbId, existingById, existingBySource })
   }
 
   const state = await readLastRunState()
@@ -99,28 +132,32 @@ async function main(): Promise<void> {
     const activeIds = new Set(activeJobsById.keys())
 
     let created = 0
-    for (const [jobId, job] of activeJobsById.entries()) {
-      if (existingById.has(jobId)) continue
-      created += 1
-      if (!dryRun) {
-        await createJob(notion, notionDbId, job, config.source)
-      }
-      existingById.set(jobId, {
-        pageId: `pending:${jobId}`,
-        jobId,
-        source: config.source,
-        status: 'Active',
-      })
-    }
-
     let removed = 0
-    const sourcePages = existingBySource.get(config.source) ?? []
-    for (const page of sourcePages) {
-      if (page.status !== 'Active') continue
-      if (activeIds.has(page.jobId)) continue
-      removed += 1
-      if (!dryRun) {
-        await markRemoved(notion, page.pageId)
+
+    for (const db of dbStates) {
+      for (const [jobId, job] of activeJobsById.entries()) {
+        if (db.existingById.has(jobId)) continue
+        created += 1
+        if (!dryRun) {
+          await createJob(notion, db.dbId, job, config.source)
+          await sleep(writeDelayMs)
+        }
+        db.existingById.set(jobId, {
+          pageId: `pending:${jobId}`,
+          source: config.source,
+          status: 'Active',
+        })
+      }
+
+      const sourcePages = db.existingBySource.get(config.source) ?? []
+      for (const page of sourcePages) {
+        if (page.status !== 'Active') continue
+        if (activeIds.has(page.jobId)) continue
+        removed += 1
+        if (!dryRun) {
+          await markRemoved(notion, page.pageId)
+          await sleep(writeDelayMs)
+        }
       }
     }
 
@@ -144,7 +181,7 @@ async function main(): Promise<void> {
       continue
     }
     console.log(
-      `[sync] ${row.source} parsed=${row.parsedActiveJobs} created=${row.created} removed=${row.removed}${dryRun ? ' (dry-run)' : ''}`,
+      `[sync] ${row.source} parsed=${row.parsedActiveJobs} created=${row.created} removed=${row.removed} dbs=${targetDbIds.length}${dryRun ? ' (dry-run)' : ''}`,
     )
   }
 }

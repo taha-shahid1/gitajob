@@ -34,6 +34,7 @@ jobs:
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DB_ID: ${{ secrets.NOTION_DB_ID }}
+          NOTION_PUBLIC_DB_ID: ${{ secrets.NOTION_PUBLIC_DB_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit state

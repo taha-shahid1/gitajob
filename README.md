@@ -61,6 +61,10 @@ Create a local `.env` file:
 ```bash
 NOTION_TOKEN=...
 NOTION_DB_ID=...
+# optional second target database (public-facing clone)
+NOTION_PUBLIC_DB_ID=...
+# optional write delay between Notion mutations (default: 120)
+NOTION_WRITE_DELAY_MS=120
 ```
 
 Notes:
