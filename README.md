@@ -2,8 +2,6 @@
 
 Tracks technical internship postings from curated GitHub repos and syncs them to a Notion database on a schedule.
 
-## Notion database preview
-
 ![Notion database screenshot](assets/demo.png)
 
 ## What it does
