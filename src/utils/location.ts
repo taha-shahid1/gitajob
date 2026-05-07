@@ -32,6 +32,18 @@ const US_STATE_CODES = new Set([
   'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'DC',
 ])
 
+const US_STATE_NAMES = [
+  'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado', 'connecticut',
+  'delaware', 'florida', 'georgia', 'hawaii', 'idaho', 'illinois', 'indiana', 'iowa',
+  'kansas', 'kentucky', 'louisiana', 'maine', 'maryland', 'massachusetts', 'michigan',
+  'minnesota', 'mississippi', 'missouri', 'montana', 'nebraska', 'nevada',
+  'new hampshire', 'new jersey', 'new mexico', 'new york', 'north carolina',
+  'north dakota', 'ohio', 'oklahoma', 'oregon', 'pennsylvania', 'rhode island',
+  'south carolina', 'south dakota', 'tennessee', 'texas', 'utah', 'vermont',
+  'virginia', 'washington', 'west virginia', 'wisconsin', 'wyoming',
+  'district of columbia',
+]
+
 const US_CITIES = [
   'san francisco', 'new york', 'seattle', 'los angeles', 'chicago', 'boston', 'austin',
   'denver', 'atlanta', 'miami', 'houston', 'dallas', 'philadelphia', 'phoenix',
@@ -43,6 +55,8 @@ const US_CITIES = [
   'tysons', 'jersey city', 'irvine', 'sacramento', 'scottsdale', 'tempe', 'chandler',
   'fort worth', 'el paso', 'detroit', 'memphis', 'louisville', 'milwaukee',
   'albuquerque', 'omaha', 'colorado springs', 'virginia beach', 'san mateo',
+  // Common short forms in internship tables
+  'nyc', 'sf', 'sfo', 'bay area', 'silicon valley',
 ]
 
 /**
@@ -54,6 +68,16 @@ const US_CITIES = [
  */
 function matchesCode(raw: string, code: string): boolean {
   return new RegExp(`(?:^|[,\\s])${code}(?:[,\\s]|$)`).test(raw)
+}
+
+/**
+ * Handles title-case abbreviations like "Ca", "Il", "On".
+ * Intentionally excludes all-lowercase tokens to avoid false positives such as
+ * "in" (preposition) being interpreted as Indiana.
+ */
+function matchesTitleCaseCode(raw: string, code: string): boolean {
+  const title = `${code[0]}${code.slice(1).toLowerCase()}`
+  return new RegExp(`(?:^|[,\\s])${title}(?:[,\\s]|$)`).test(raw)
 }
 
 /**
@@ -83,17 +107,22 @@ export function detectCountry(location: string): Country | null {
 
   // --- CA province codes (checked before US states — no code overlap) ---
   for (const code of CA_PROVINCE_CODES) {
-    if (matchesCode(raw, code)) return 'CA'
+    if (matchesCode(raw, code) || matchesTitleCaseCode(raw, code)) return 'CA'
   }
 
   // --- US state codes (checked before province names to handle "New Brunswick, NJ") ---
   for (const code of US_STATE_CODES) {
-    if (matchesCode(raw, code)) return 'US'
+    if (matchesCode(raw, code) || matchesTitleCaseCode(raw, code)) return 'US'
   }
 
   // --- CA province full names ---
   for (const name of CA_PROVINCE_NAMES) {
     if (lower.includes(name)) return 'CA'
+  }
+
+  // --- US state full names ---
+  for (const name of US_STATE_NAMES) {
+    if (lower.includes(name)) return 'US'
   }
 
   // --- Known Canadian cities ---
