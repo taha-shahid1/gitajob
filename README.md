@@ -1,1 +1,109 @@
 # gitajob
+
+Tracks technical internship postings from curated GitHub repos and syncs them to a Notion database on a schedule.
+
+## Notion database preview
+
+![Notion database screenshot](assets/demo.png)
+
+## What it does
+
+- Pulls internship listings from:
+  - [speedyapply/2026-SWE-College-Jobs](https://github.com/speedyapply/2026-SWE-College-Jobs)
+  - [negarprh/Canadian-Tech-Internships-2026](https://github.com/negarprh/Canadian-Tech-Internships-2026)
+  - [SimplifyJobs/Summer2026-Internships](https://github.com/SimplifyJobs/Summer2026-Internships)
+- Keeps only roles that look technical (SWE, dev, devops, cloud, infra, security, data, AI/ML, etc.)
+- Keeps only US/Canada jobs (with location normalization and country inference)
+- Uses a fixed date cutoff (`2026-05-01`) to ignore stale postings
+- Writes jobs to Notion and marks missing active jobs as `Removed`
+- Stores source SHAs in `last_run.json` to skip unchanged repos
+
+## Repo layout
+
+```text
+src/
+  main.ts                 # orchestrator
+  github.ts               # GitHub fetch helpers (SHA + raw file content)
+  notion.ts               # Notion read/create/remove operations
+  constants.ts            # global constants (cutoff date)
+  types.ts
+  parsers/
+    index.ts              # parser registry + source config
+    swe-college-jobs.ts
+    canadian-internships.ts
+    simplify.ts
+  utils/
+    location.ts           # US/CA location + country detection
+    role.ts               # technical-role classification
+    hash.ts               # stable job id
+```
+
+## Notion database schema
+
+Create a Notion database with these property names:
+
+- `Company` (Title)
+- `Role` (Text)
+- `Location` (Text)
+- `Country` (Select)
+- `URL` (URL)
+- `Source` (Text)
+- `ID` (Text)
+- `Status` (Select)
+- `DatePosted` (Date)
+
+`Status` should include at least: `Active`, `Removed`, `Applied`, `Interviewing`, `Rejected`, `Offer`.
+
+## Environment variables
+
+Create a local `.env` file:
+
+```bash
+NOTION_TOKEN=...
+NOTION_DB_ID=...
+```
+
+Notes:
+- `NOTION_DB_ID` should be the database ID only (no `?v=...` suffix)
+- `GITHUB_TOKEN` is optional locally, but recommended in CI
+
+## Run locally
+
+Install:
+
+```bash
+npm install
+```
+
+Dry run (no writes to Notion, no `last_run.json` update):
+
+```bash
+DRY_RUN=1 npx ts-node src/main.ts
+```
+
+Real sync:
+
+```bash
+npx ts-node src/main.ts
+```
+
+## GitHub Actions
+
+Workflow: `.github/workflows/scrape.yml`
+
+- Runs every 6 hours (`0 */6 * * *`)
+- Can be triggered manually (`workflow_dispatch`)
+- Commits updated `last_run.json` when SHA state changes
+
+Set these **repository secrets**:
+
+- `NOTION_TOKEN`
+- `NOTION_DB_ID`
+
+`GITHUB_TOKEN` is built-in and does not need to be created manually.
+
+## Design notes
+
+- Full-file parsing is used per changed SHA (not patch-line diff parsing). This is deliberate: grouped rows (`↳`) and table structure are easier to parse correctly with full context.
+- Dedup uses a stable hash of `company + role + url`.
+- Removal is status-based (`Removed`) rather than deleting pages, so history stays in Notion.
