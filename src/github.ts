@@ -5,7 +5,7 @@ function apiHeaders(): Record<string, string> {
   const token = process.env.GITHUB_TOKEN
   return {
     Accept: 'application/vnd.github.v3+json',
-    'User-Agent': 'notiontern',
+    'User-Agent': 'gitajob',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 }
@@ -39,7 +39,7 @@ export async function fetchFileContent(
   path: string,
 ): Promise<string> {
   const url = `${GH_RAW}/${repo}/${branch}/${path}`
-  const res = await fetch(url, { headers: { 'User-Agent': 'notiontern' } })
+  const res = await fetch(url, { headers: { 'User-Agent': 'gitajob' } })
   if (!res.ok) {
     throw new Error(`GitHub raw ${res.status} fetching ${repo}@${branch}:${path}`)
   }
