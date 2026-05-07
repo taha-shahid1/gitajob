@@ -2,6 +2,7 @@ import { load } from 'cheerio'
 import type { Country, RawJob } from '../types'
 import { detectCountry, isRemoteNoCountry } from '../utils/location'
 import { CUT_OFF } from '../constants'
+import { isTechnicalRole } from '../utils/role'
 
 /**
  * Parses location strings from a table cell's inner HTML.
@@ -44,6 +45,7 @@ export function parseSimplify(content: string, asOf: Date): RawJob[] {
 
     const role = tds.eq(1).text().trim()
     if (!role) return
+    if (!isTechnicalRole(role)) return
 
     const ageMatch = /^(\d+)d$/.exec(tds.eq(4).text().trim())
     if (!ageMatch) return

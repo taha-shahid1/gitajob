@@ -1,6 +1,7 @@
 import type { Country, RawJob } from '../types'
 import { detectCountry, isRemoteNoCountry } from '../utils/location'
 import { CUT_OFF } from '../constants'
+import { isTechnicalRole } from '../utils/role'
 
 function stripHtml(s: string): string {
   return s.replace(/<[^>]+>/g, '').trim()
@@ -70,6 +71,9 @@ export function parseSpeedyApply(content: string, asOf: Date): RawJob[] {
     const datePosted = new Date(asOf.getTime() - parseInt(ageMatch[1]) * 86400000)
     if (datePosted < CUT_OFF) continue
 
+    const role = stripHtml(cells[map.role])
+    if (!isTechnicalRole(role)) continue
+
     const location = stripHtml(cells[map.loc])
     // Bare "Remote" (no country qualifier) defaults to US for this US-focused source.
     const country: Country | null = detectCountry(location) ?? (isRemoteNoCountry(location) ? 'US' : null)
@@ -77,7 +81,7 @@ export function parseSpeedyApply(content: string, asOf: Date): RawJob[] {
 
     jobs.push({
       company: stripHtml(companyCell),
-      role: stripHtml(cells[map.role]),
+      role,
       location,
       country,
       url: extractHref(cells[map.posting]),
