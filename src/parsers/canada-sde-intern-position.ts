@@ -1,6 +1,6 @@
 import { CUT_OFF } from '../constants'
 import type { RawJob } from '../types'
-import { detectCountry } from '../utils/location'
+import { hasGraduationCapEmoji, isTechnicalRole } from '../utils/role'
 import type { ParseContext } from './index'
 
 function splitRow(raw: string): string[] {
@@ -38,6 +38,23 @@ function normalizeDate(value: Date): Date {
   return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()))
 }
 
+/**
+ * Source-specific non-tech filtering for broad categories in this repo.
+ * We still keep engineering/data roles, but exclude support/PMO/ops-heavy postings.
+ */
+function isExcludedBroadOpsRole(role: string): boolean {
+  const s = role.toLowerCase()
+  return [
+    /\bhelp\s*desk\b/,
+    /\bdesktop support\b/,
+    /\bit support\b/,
+    /\bpmo\b/,
+    /\bprogram management office\b/,
+    /\bcustomer support\b/,
+    /\btechnical support\b/,
+  ].some(pattern => pattern.test(s))
+}
+
 export function parseCanadaSdeInternPosition(content: string, context: ParseContext): RawJob[] {
   const jobs: RawJob[] = []
   const fallbackDate = context.fileCommitDate ? normalizeDate(context.fileCommitDate) : normalizeDate(context.asOf)
@@ -54,6 +71,9 @@ export function parseCanadaSdeInternPosition(content: string, context: ParseCont
     const company = cells[1].trim()
     const location = cells[5].trim()
     if (!title || !company || !location) continue
+    if (hasGraduationCapEmoji(title)) continue
+    if (!isTechnicalRole(title)) continue
+    if (isExcludedBroadOpsRole(title)) continue
 
     const url = extractApplyUrl(cells[6])
     const isActive = Boolean(url) && !/closed|filled|expired|🔒/i.test(cells[6])
