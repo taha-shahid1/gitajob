@@ -1,4 +1,5 @@
 import type { Country, RawJob } from '../types'
+import type { ParseContext } from './index'
 import { detectCountry, isRemoteNoCountry } from '../utils/location'
 import { CUT_OFF } from '../constants'
 import { hasGraduationCapEmoji, isTechnicalRole } from '../utils/role'
@@ -50,8 +51,9 @@ function resolveColMap(cells: string[]): ColMap | null {
   return null
 }
 
-export function parseSpeedyApply(content: string, asOf: Date): RawJob[] {
+export function parseSpeedyApply(content: string, context: ParseContext): RawJob[] {
   const jobs: RawJob[] = []
+  const { asOf } = context
 
   for (const line of content.split('\n')) {
     const trimmed = line.trim()

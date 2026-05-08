@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import { readFile, writeFile } from 'fs/promises'
 import { resolve } from 'path'
-import { fetchFileContent, fetchLatestSha } from './github'
+import { fetchFileContent, fetchLatestCommitDateForPath, fetchLatestSha } from './github'
 import { createJob, createNotionClient, loadAllPages, markRemoved } from './notion'
 import { PARSERS } from './parsers'
 import type { RawJob } from './types'
@@ -134,7 +134,15 @@ async function main(): Promise<void> {
     const parsedJobs: RawJob[] = []
     for (const path of config.filePaths) {
       const content = await fetchFileContent(config.source, config.branch, path)
-      parsedJobs.push(...config.parse(content, asOf))
+      const fileCommitDate = await fetchLatestCommitDateForPath(config.source, config.branch, path)
+      parsedJobs.push(
+        ...config.parse(content, {
+          asOf,
+          source: config.source,
+          filePath: path,
+          fileCommitDate,
+        }),
+      )
     }
 
     const activeJobsById = buildActiveJobMap(parsedJobs)

@@ -1,4 +1,5 @@
 import type { RawJob } from '../types'
+import type { ParseContext } from './index'
 import { detectCountry } from '../utils/location'
 import { CUT_OFF } from '../constants'
 import { hasGraduationCapEmoji, isTechnicalRole } from '../utils/role'
@@ -34,7 +35,7 @@ function parseDate(raw: string): Date | null {
   return isNaN(d.getTime()) ? null : d
 }
 
-export function parseCanadianInternships(content: string, _asOf: Date): RawJob[] {
+export function parseCanadianInternships(content: string, _context: ParseContext): RawJob[] {
   const jobs: RawJob[] = []
   let prevCompany = ''
 

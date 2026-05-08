@@ -1,5 +1,6 @@
 import { load } from 'cheerio'
 import type { Country, RawJob } from '../types'
+import type { ParseContext } from './index'
 import { detectCountry, isRemoteNoCountry } from '../utils/location'
 import { CUT_OFF } from '../constants'
 import { hasGraduationCapEmoji, isTechnicalRole } from '../utils/role'
@@ -26,10 +27,11 @@ function extractLocations(cellHtml: string): string[] {
     .filter(Boolean)
 }
 
-export function parseSimplify(content: string, asOf: Date): RawJob[] {
+export function parseSimplify(content: string, context: ParseContext): RawJob[] {
   const $ = load(content)
   const jobs: RawJob[] = []
   let prevCompany = ''
+  const { asOf } = context
 
   $('table tr').each((_, tr) => {
     const tds = $(tr).find('td')

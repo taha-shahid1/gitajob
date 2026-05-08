@@ -10,9 +10,11 @@ Tracks technical internship postings from curated GitHub repos and syncs them to
   - [speedyapply/2026-SWE-College-Jobs](https://github.com/speedyapply/2026-SWE-College-Jobs)
   - [negarprh/Canadian-Tech-Internships-2026](https://github.com/negarprh/Canadian-Tech-Internships-2026)
   - [SimplifyJobs/Summer2026-Internships](https://github.com/SimplifyJobs/Summer2026-Internships)
+  - [hanzili/canada_sde_intern_position](https://github.com/hanzili/canada_sde_intern_position)
 - Keeps only roles that look technical (SWE, dev, devops, cloud, infra, security, data, AI/ML, etc.)
 - Keeps only US/Canada jobs (with location normalization and country inference)
 - Uses a fixed date cutoff (`2026-05-01`) to ignore stale postings
+  - For sources without explicit posting dates, falls back to the latest commit date of the source file
 - Writes jobs to Notion and marks missing active jobs as `Removed`
 - Stores source SHAs in `last_run.json` to skip unchanged repos
 
@@ -30,6 +32,7 @@ src/
     swe-college-jobs.ts
     canadian-internships.ts
     simplify.ts
+    canada-sde-intern-position.ts
   utils/
     location.ts           # US/CA location + country detection
     role.ts               # technical-role classification

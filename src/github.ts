@@ -27,6 +27,25 @@ export async function fetchLatestSha(repo: string, branch: string): Promise<stri
   return commits[0].sha
 }
 
+export async function fetchLatestCommitDateForPath(
+  repo: string,
+  branch: string,
+  path: string,
+): Promise<Date | null> {
+  const res = await fetch(
+    `${GH_API}/repos/${repo}/commits?per_page=1&sha=${branch}&path=${encodeURIComponent(path)}`,
+    { headers: apiHeaders() },
+  )
+  if (!res.ok) {
+    throw new Error(`GitHub API ${res.status} fetching commit date for ${repo}@${branch}:${path}`)
+  }
+  const commits = (await res.json()) as Array<{ commit?: { committer?: { date?: string } } }>
+  const iso = commits[0]?.commit?.committer?.date
+  if (!iso) return null
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
 /**
  * Fetches the raw text content of a file from a public GitHub repo.
  *
