@@ -59,11 +59,14 @@ export function createNotionClient(): Client {
 }
 
 /**
- * Fetches all non-Removed pages from the database in one paginated sweep.
+ * Fetches all pages from the database in one paginated sweep.
  *
  * Called once at startup so every subsequent dedup check is a Set lookup
  * rather than an API call. Skips pages missing the ID or Source properties
  * (e.g. manually created rows).
+ *
+ * Important: includes pages in every status (Active, Applied, Removed, etc.)
+ * so parser reruns do not recreate rows that users intentionally marked.
  */
 export async function loadAllPages(client: Client, dbId: string): Promise<NotionPage[]> {
   const pages: NotionPage[] = []
@@ -74,7 +77,6 @@ export async function loadAllPages(client: Client, dbId: string): Promise<Notion
       () =>
         client.databases.query({
           database_id: dbId,
-          filter: { property: 'Status', select: { does_not_equal: 'Removed' } },
           page_size: 100,
           ...(cursor ? { start_cursor: cursor } : {}),
         }),
