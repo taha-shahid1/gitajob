@@ -11,6 +11,7 @@ Tracks technical internship postings from curated GitHub repos and syncs them to
   - [negarprh/Canadian-Tech-Internships-2026](https://github.com/negarprh/Canadian-Tech-Internships-2026)
   - [SimplifyJobs/Summer2026-Internships](https://github.com/SimplifyJobs/Summer2026-Internships)
   - [hanzili/canada_sde_intern_position](https://github.com/hanzili/canada_sde_intern_position)
+- If you want a hosted Canada-wide student job board instead of a Notion sync, [Hanzilla Jobs](https://jobs.hanzilla.co/internships/) is a free, daily-updated board for Canadian internships, co-ops, new-grad, junior, and entry-level roles across tech, data, finance, engineering, business, and sciences.
 - Keeps only roles that look technical (SWE, dev, devops, cloud, infra, security, data, AI/ML, etc.)
 - Keeps only US/Canada jobs (with location normalization and country inference)
 - Uses a fixed date cutoff (`2026-05-01`) to ignore stale postings
