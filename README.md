@@ -7,9 +7,9 @@ Tracks technical internship postings from curated GitHub repos and syncs them to
 ## What it does
 
 - Pulls internship listings from:
-  - [speedyapply/2026-SWE-College-Jobs](https://github.com/speedyapply/2026-SWE-College-Jobs)
-  - [negarprh/Canadian-Tech-Internships-2026](https://github.com/negarprh/Canadian-Tech-Internships-2026)
-  - [SimplifyJobs/Summer2026-Internships](https://github.com/SimplifyJobs/Summer2026-Internships)
+  - [speedyapply/2027-SWE-College-Jobs](https://github.com/speedyapply/2027-SWE-College-Jobs)
+  - [negarprh/Canadian-Tech-Internships-2027](https://github.com/negarprh/Canadian-Tech-Internships-2027)
+  - [SimplifyJobs/Summer2027-Internships](https://github.com/SimplifyJobs/Summer2027-Internships)
   - [hanzili/canada_sde_intern_position](https://github.com/hanzili/canada_sde_intern_position)
 - Keeps only roles that look technical (SWE, dev, devops, cloud, infra, security, data, AI/ML, etc.)
 - Keeps only US/Canada jobs (with location normalization and country inference)
@@ -52,6 +52,7 @@ Create a Notion database with these property names:
 - `ID` (Text)
 - `Status` (Select)
 - `DatePosted` (Date)
+- `DaysOpen` (Formula: `dateBetween(now(), prop("DatePosted"), "days")`)
 
 `Status` should include at least: `Active`, `Removed`, `Applied`, `Interviewing`, `Rejected`, `Offer`.
 

@@ -23,7 +23,7 @@ export interface ParserConfig {
 
 export const PARSERS: ParserConfig[] = [
   {
-    source: 'speedyapply/2026-SWE-College-Jobs',
+    source: 'speedyapply/2027-SWE-College-Jobs',
     branch: 'main',
     // README.md = US internships (double-pipe rows, may have Salary column)
     // INTERN_INTL.md = international internships (single-pipe rows, no Salary column)
@@ -32,13 +32,13 @@ export const PARSERS: ParserConfig[] = [
     parse: parseSpeedyApply,
   },
   {
-    source: 'negarprh/Canadian-Tech-Internships-2026',
+    source: 'negarprh/Canadian-Tech-Internships-2027',
     branch: 'main',
     filePaths: ['README.md'],
     parse: parseCanadianInternships,
   },
   {
-    source: 'SimplifyJobs/Summer2026-Internships',
+    source: 'SimplifyJobs/Summer2027-Internships',
     branch: 'dev',
     filePaths: ['README.md'],
     parse: parseSimplify,
